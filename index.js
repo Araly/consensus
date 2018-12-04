@@ -149,4 +149,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.Dug-kQ.uS5yNDRWPg5FwpSSrVBI3pYId4c");
+bot.login("");
