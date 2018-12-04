@@ -9,6 +9,16 @@ class LinkedNode {
         this.previous = newNode;
         list = newNode;
     }
+    remove (session) {
+        if (this != null) {
+            if (this.previous != null) {
+                this.previous.next = this.next;
+            }
+            if (this.next != null) {
+                this.next.previous = this.previous;
+            }
+        }
+    }
 }
 
 class TreeNode {
@@ -22,7 +32,14 @@ class TreeNode {
 
 class Candidate {
     constructor (name, tree) {
-        this.name = name;
+        this.name = name;class TreeNode {
+    constructor (vote, parent, left, right) {
+        this.vote = vote;
+        this.parent = parent;
+        this.left = left;
+        this.right = right;
+    }
+}
         this.tree = tree;
     }
 }
@@ -56,7 +73,9 @@ bot.on('message', (message) => {
     if(message.content == "init") {
         if (list == null) {
             list = new LinkedNode(new Session(), null, null);
-            
+        }
+        else {
+            list.add(new Session());
         }
     }
 });
