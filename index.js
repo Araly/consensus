@@ -32,17 +32,6 @@ class LinkedNode {
         }
         return toReturn;
     }
-    /*search (guild) { // To change from specific to Session to usable as Candidates too
-    let toReturn = null;
-    if (this != null) {
-    while (this.next != null) {
-    if (this.session.guild == guild) {
-    toReturn = this;
-}
-}
-}
-return toReturn;
-}*/
 }
 
 class TreeNode {
@@ -52,22 +41,90 @@ class TreeNode {
         this.left = left;
         this.right = right;
     }
+    toString () {
+        let toReturn = "toString failed";
+        if (this != null) {
+            toReturn = "(" + this.vote;
+            if (this.left != 0) {
+                toReturn += this.left;
+            }
+            else {
+                toReturn += "nil";
+            }
+            toReturn += " ";
+            if (this.right != 0) {
+                toReturn += this.right;
+            }
+            else {
+                toReturn += "nil";
+            }
+            toReturn += ")";
+        }
+        return toReturn;
+    }
+    add (vote) {
+        let toReturn = -1;
+        if (this != null) {
+            if (this.vote.user == vote.user) {
+                this.vote = vote;
+                toReturn = this;
+                break;
+            }
+            else if (this.vote.user < vote.user) {
+                if (this.left != null) {
+                    this.left.add(vote);
+                }
+                else {
+                    this.left = new TreeNode(vote, this, null, null);
+                    toReturn = this.left;
+                }
+            }
+            else if (this.vote.user > vote.user) {
+                if (this.right != null) {
+                    this.right.add(vote);
+                }
+                else {
+                    this.right = new TreeNode(vote, this, null, null);
+                    toReturn = this.right;
+                }
+            }
+        }
+        return toReturn;
+    }
 }
 
 class Candidate {
-    constructor (name, tree) {
+    constructor (name, score, tree) {
         this.name = name;
+        this.score = score;
         this.tree = tree;
     }
     toString () {
-        let toReturn = this.name;
+        let toReturn = this.name + "[" + this.score + "]: " + this.tree;
         return toReturn;
+    }
+    addVote (vote) {
+        if (this != null) {
+            if (this.tree != null) {
+                this.tree.add(vote);
+            }
+            else {
+                this.tree = new TreeNode(vote, null, null, null);
+            }
+        }
     }
 }
 
 class Vote {
     constructor (user) {
         this.user = user;
+    }
+    toString () {
+        let toReturn = "toString failed";
+        if (this != null) {
+            toReturn = this.user;
+        }
+        return toReturn;
     }
 }
 
@@ -79,13 +136,38 @@ class Session {
     toString () {
         let toReturn = "toString failed";
         if (this.guildId != null) {
-            toReturn = this.guildId + ": ";
+            toReturn = "\n" + this.guildId + ": ";
         }
         if (this.candidates != null) {
             toReturn += this.candidates;
         }
         return toReturn;
     }
+}
+
+// Functions
+function LinkedNodeSearchSession (node, guildId) {
+    let toReturn = null;
+    while (node != null) {
+        if (node.element.guildId == guildId) {
+            toReturn = node;
+            break;
+        }
+        node = node.next;
+    }
+    return toReturn;
+}
+
+function LinkedNodeSearchCandidate (candidate, name) {
+    let toReturn = null;
+    while (candidate != null) {
+        if (candidate.element.name == name) {
+            toReturn = node;
+            break;
+        }
+        candidate = candidate.next;
+    }
+    return toReturn;
 }
 
 // Constants
@@ -116,13 +198,31 @@ bot.on('message', (message) => {
     let toReply = "error";
     // we check what the command was
     switch (command[0]) {
+        // displaying general information about the bot, and information about the current session if it exists
+        case "info":
+        break;
+
+        // voting for one of the candidates
+        case "vote":
+        toReply = "vote could not be understood and cast, make sure you spell the candidate right";
+        if (command.length == 2) {
+            let session = LinkedNodeSearchSession(sessions, message.guild.id);
+            console.log(session);
+            let candidate = LinkedNodeSearchCandidate(session.candidates, command[1]);
+            console.log(candidate);
+            candidate.addVote(message.author.id);
+            toReply = "vote was cast for " + candidate;
+            message.reply(toReply);
+        }
+        break;
+
         // intialization of a session
         case "init":
-        toReply = "Session could not be initialized, too few parameters, please try `" + prefix + "help` for more information";
+        toReply = "session could not be initialized, probably too few parameters, please try `" + prefix + "help` for more information";
         if (command.length > 2) {
-            let candidates = new LinkedNode(new Candidate(command[command.length - 1], null), null, null);
+            let candidates = new LinkedNode(new Candidate(command[command.length - 1], -1, null), null, null);
             for (i = command.length - 2; i > 0; i--) {
-                candidates = candidates.add(new Candidate(command[i], null));
+                candidates = candidates.add(new Candidate(command[i], -1, null));
             }
             if (sessions == null) {
                 sessions = new LinkedNode(new Session(message.guild.id, candidates), null, null);
