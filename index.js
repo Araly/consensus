@@ -8,7 +8,7 @@ class LinkedNode {
     add (element) {
         let newNode = new LinkedNode(element, null, this);
         this.previous = newNode;
-        sessions = newNode;
+        return newNode;
     }
     remove (element) {
         if (this != null) {
@@ -21,10 +21,16 @@ class LinkedNode {
         }
     }
     toString () {
-        let toReturn = "";
-        while (this.next != null) {
-            toReturn += element.toString();
+        let toReturn = "toString failed";
+        if (this != null) {
+            toReturn = this.element;
+            let node = this;
+            while (node.next != null) {
+                node = node.next;
+                toReturn += ", " + node.element;
+            }
         }
+        return toReturn;
     }
     /*search (guild) { // To change from specific to Session to usable as Candidates too
     let toReturn = null;
@@ -54,7 +60,7 @@ class Candidate {
         this.tree = tree;
     }
     toString () {
-        let toReturn = name;
+        let toReturn = this.name;
         return toReturn;
     }
 }
@@ -73,10 +79,10 @@ class Session {
     toString () {
         let toReturn = "toString failed";
         if (this.guildId != null) {
-            toReturn = this.guildId;
+            toReturn = this.guildId + ": ";
         }
-        if (candidates != null) {
-            toReturn += candidates.toString();
+        if (this.candidates != null) {
+            toReturn += this.candidates;
         }
         return toReturn;
     }
@@ -85,7 +91,7 @@ class Session {
 // Constants
 const discord = require('discord.js');
 const bot = new discord.Client();
-const sessions = null;
+let sessions = null;
 const prefix = "&";
 
 bot.on('ready', () => {
@@ -103,37 +109,37 @@ bot.on('message', (message) => {
         return;
     }
 
-    // We get rid of the prefix
+    // we get rid of the prefix
     let command = message.content.slice(prefix.length);
     command = command.split(' ');
-
     console.log(message.content);
+    let toReply = "error";
+    // we check what the command was
     switch (command[0]) {
         // intialization of a session
         case "init":
-        console.log(command.length);
+        toReply = "Session could not be initialized, too few parameters, please try `" + prefix + "help` for more information";
         if (command.length > 2) {
-            let candidates = new LinkedNode(new Candidate(command[1], null), null, null);
-            for (i = 2; i < command.length; i++) {
-                candidates.add(new Candidate(command[i], null));
+            let candidates = new LinkedNode(new Candidate(command[command.length - 1], null), null, null);
+            for (i = command.length - 2; i > 0; i--) {
+                candidates = candidates.add(new Candidate(command[i], null));
             }
             if (sessions == null) {
-                sessions = new LinkedNode(new Session(message.guild.id, ), null, null);
+                sessions = new LinkedNode(new Session(message.guild.id, candidates), null, null);
             }
             else {
-                sessions.add(new Session());
+                sessions = sessions.add(new Session(message.guild.id, candidates));
             }
+            toReply = "initialized session with " + candidates;
         }
-        else {
-            message.reply("Session could not be initialized, too few parameters, please try `" + prefix + "help` for more information");
-        }
+        message.reply(toReply);
         break;
 
         // debug for the sessions
         case "debug":
-        let toReply = "no sessions found";
+        toReply = "no sessions found";
         if (sessions != null) {
-            toReply = sessions.toString();
+            toReply = sessions.element.toString();
         }
         message.reply(toReply);
         break;
