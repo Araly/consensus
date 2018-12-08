@@ -110,15 +110,10 @@ class TreeNode {
         let toRemove = this.search(vote);
         console.log(toRemove);
         if (toRemove != null) {
-            // TODO : toRemove maybe is the head and only element of this tree, if that's the case we need to remove references to it, which are in its associated Candidate
             if (toRemove.parent != null) {
-
                 if (toRemove.left == null && toRemove.right == null) {
-                    if (toRemove.parent == null) {
-
-                    }
                     // toRemove doesn't have childs, lets see if it's a left or right child itself of toRemove.parent
-                    else if (toRemove.parent.left == toRemove) {
+                    if (toRemove.parent.left == toRemove) {
                         toRemove.parent.left = null;
                     }
                     else if (toRemove.parent.right == toRemove) {
@@ -151,7 +146,37 @@ class TreeNode {
                     toRemove.parent.right = toRemove.right;
                 }
             }
+            else {
+                if (toRemove.left == null && toRemove.right == null) {
+                    toReturn = -1; // mark the tree for deletion, nothing is left in it
+                }
+                else if (toRemove.left != null && toRemove.right != null) {
+                    // find left most node of toRemove.right
+                    let leftmost = toRemove.right;
+                    while (leftmost.left != null) {
+                        leftmost = leftmost.left;
+                    }
+                    // attach back leftmost.right to the rest of the tree
+                    if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                        toRemove.right = leftmost.right;
+                    }
+                    else {
+                        leftmost.parent.left = leftmost.right;
+                    }
+                    //replace toRemove's value by leftmost's
+                    toRemove.vote = leftmost.vote;
+                    // forget about leftmost, let it get caught by oblivion
+                    return toRemove;
+                }
+                else if (toRemove.left != null) {
+                    toReturn = toRemove.left; // mark toRemove.left as new head of tree
+                }
+                else if (toRemove.right != null) {
+                    toReturn = toRemove.right; // mark toRemove.right as new head of tree
+                }
+            }
         }
+        return toReturn;
     }
 }
 
@@ -176,10 +201,17 @@ class Candidate {
         }
     }
     removeVote (vote) {
+        let result = null;
         if (this != null && vote != null) {
             if (this.tree != null) {
-                this.tree.remove(vote);
+                result = this.tree.remove(vote);
             }
+        }
+        if (result == -1) { // this.tree.remove(vote) marked the tree for deletion,
+            this.tree = null;
+        }
+        else if (result != null) {
+            this.tree = result;
         }
     }
 }
@@ -344,4 +376,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.Du1uEw.1hvKuQ1mWaVbQd_ejDfMeUcP7lc");
+bot.login("TOKEN");
