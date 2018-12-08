@@ -23,11 +23,11 @@ class LinkedNode {
     toString () {
         let toReturn = "toString failed";
         if (this != null) {
-            toReturn = this.element;
+            toReturn = "\n" + this.element;
             let node = this;
             while (node.next != null) {
                 node = node.next;
-                toReturn += ", " + node.element;
+                toReturn += "\n" + node.element;
             }
         }
         return toReturn;
@@ -48,11 +48,32 @@ class TreeNode {
             if (this.left != null) {
                 toReturn += this.left + " ";
             }
+            else {
+                toReturn += "_ ";
+            }
             toReturn += this.vote;
             if (this.right != null) {
                 toReturn += " " + this.right;
             }
+            else {
+                toReturn += " _";
+            }
             toReturn += ")";
+        }
+        return toReturn;
+    }
+    search (vote) {
+        let toReturn = null;
+        if (this != null) {
+            if (this.vote.user == vote.user) {
+                toReturn = this;
+            }
+            else if (this.vote.user > vote.user && this.left != null) {
+                toReturn = this.left.search(vote);
+            }
+            else if (this.vote.user < vote.user && this.right != null) {
+                toReturn = this.right.search(vote);
+            }
         }
         return toReturn;
     }
@@ -84,6 +105,54 @@ class TreeNode {
         }
         return toReturn;
     }
+    remove (vote) {
+        let toReturn = null;
+        let toRemove = this.search(vote);
+        console.log(toRemove);
+        if (toRemove != null) {
+            // TODO : toRemove maybe is the head and only element of this tree, if that's the case we need to remove references to it, which are in its associated Candidate
+            if (toRemove.parent != null) {
+
+                if (toRemove.left == null && toRemove.right == null) {
+                    if (toRemove.parent == null) {
+
+                    }
+                    // toRemove doesn't have childs, lets see if it's a left or right child itself of toRemove.parent
+                    else if (toRemove.parent.left == toRemove) {
+                        toRemove.parent.left = null;
+                    }
+                    else if (toRemove.parent.right == toRemove) {
+                        toRemove.parent.right = null;
+                    }
+                }
+                else if (toRemove.left != null && toRemove.right != null) {
+                    // find left most node of toRemove.right
+                    let leftmost = toRemove.right;
+                    while (leftmost.left != null) {
+                        leftmost = leftmost.left;
+                    }
+                    // attach back leftmost.right to the rest of the tree
+                    if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                        toRemove.right = leftmost.right;
+                    }
+                    else {
+                        leftmost.parent.left = leftmost.right;
+                    }
+                    //replace toRemove's value by leftmost's
+                    toRemove.vote = leftmost.vote;
+                    // forget about leftmost, let it get caught by oblivion
+                }
+                else if (toRemove.left != null) {
+                    toRemove.left.parent = toRemove.parent;
+                    toRemove.parent.left = toRemove.left;
+                }
+                else if (toRemove.right != null) {
+                    toRemove.right.parent = toRemove.parent;
+                    toRemove.parent.right = toRemove.right;
+                }
+            }
+        }
+    }
 }
 
 class Candidate {
@@ -98,12 +167,18 @@ class Candidate {
     }
     addVote (vote) {
         if (this != null && vote != null) {
-            vote = new Vote(vote);
             if (this.tree != null) {
                 this.tree.add(vote);
             }
             else {
                 this.tree = new TreeNode(vote, null, null, null);
+            }
+        }
+    }
+    removeVote (vote) {
+        if (this != null && vote != null) {
+            if (this.tree != null) {
+                this.tree.remove(vote);
             }
         }
     }
@@ -137,10 +212,26 @@ class Session {
         }
         return toReturn;
     }
+    addVote (candidateName, vote) {
+        let toReturn = null;
+        // remove the vote where it was
+        let node = this.candidates;
+        while (node != null) {
+            node.element.removeVote(vote);
+            node = node.next;
+        }
+        // once it's removed, we can add the vote again, replacing it effectively
+        let candidate = linkedNodeSearchCandidate(this.candidates, candidateName);
+        if (candidate != null) {
+            candidate.addVote(vote);
+            toReturn = vote;
+        }
+        return toReturn;
+    }
 }
 
 // Functions
-function LinkedNodeSearchSession (node, guildId) {
+function linkedNodeSearchSession (node, guildId) {
     let toReturn = null;
     while (node != null) {
         if (node.element.guildId == guildId) {
@@ -152,7 +243,7 @@ function LinkedNodeSearchSession (node, guildId) {
     return toReturn;
 }
 
-function LinkedNodeSearchCandidate (node, name) {
+function linkedNodeSearchCandidate (node, name) {
     let toReturn = null;
     while (node != null) {
         if (node.element.name == name) {
@@ -198,21 +289,20 @@ bot.on('message', (message) => {
 
         // voting for one of the candidates
         case "vote":
-        toReply = "vote could not be understood and cast, make sure you spell the candidate right";
+        toReply = "vote could not be understood and cast, make sure you spelled the candidate right";
         if (command.length == 2) {
-            let session = LinkedNodeSearchSession(sessions, message.guild.id);
-            let candidate = LinkedNodeSearchCandidate(session.candidates, command[1]);
-            candidate.addVote(message.author.id);
-            toReply = "vote was cast for " + candidate;
-            message.reply(toReply);
+            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(message.user.id))
+            if (vote != null) {
+                toReply = "vote was cast: " + vote;
+            }
         }
         if (command.length == 3) { // for debug purposes only
-            let session = LinkedNodeSearchSession(sessions, message.guild.id);
-            let candidate = LinkedNodeSearchCandidate(session.candidates, command[1]);
-            candidate.addVote(command[2]);
-            toReply = "vote was cast for " + candidate;
-            message.reply(toReply);
+            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(command[2]))
+            if (vote != null) {
+                toReply = "vote was cast: " + vote;
+            }
         }
+        message.reply(toReply);
         break;
 
         // intialization of a session
@@ -229,7 +319,7 @@ bot.on('message', (message) => {
             else {
                 sessions = sessions.add(new Session(message.guild.id, candidates));
             }
-            toReply = "initialized session with " + candidates;
+            toReply = "initialized session with" + candidates;
         }
         message.reply(toReply);
         break;
@@ -254,4 +344,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("");
+bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.Du1uEw.1hvKuQ1mWaVbQd_ejDfMeUcP7lc");
