@@ -44,19 +44,13 @@ class TreeNode {
     toString () {
         let toReturn = "toString failed";
         if (this != null) {
-            toReturn = "(" + this.vote;
-            if (this.left != 0) {
-                toReturn += this.left;
+            toReturn = "(";
+            if (this.left != null) {
+                toReturn += this.left + " ";
             }
-            else {
-                toReturn += "nil";
-            }
-            toReturn += " ";
-            if (this.right != 0) {
-                toReturn += this.right;
-            }
-            else {
-                toReturn += "nil";
+            toReturn += this.vote;
+            if (this.right != null) {
+                toReturn += " " + this.right;
             }
             toReturn += ")";
         }
@@ -68,9 +62,8 @@ class TreeNode {
             if (this.vote.user == vote.user) {
                 this.vote = vote;
                 toReturn = this;
-                break;
             }
-            else if (this.vote.user < vote.user) {
+            else if (this.vote.user > vote.user) {
                 if (this.left != null) {
                     this.left.add(vote);
                 }
@@ -79,7 +72,7 @@ class TreeNode {
                     toReturn = this.left;
                 }
             }
-            else if (this.vote.user > vote.user) {
+            else if (this.vote.user < vote.user) {
                 if (this.right != null) {
                     this.right.add(vote);
                 }
@@ -100,11 +93,12 @@ class Candidate {
         this.tree = tree;
     }
     toString () {
-        let toReturn = this.name + "[" + this.score + "]: " + this.tree;
+        let toReturn = this.name + "[" + this.score + "]: `" + this.tree + "`";
         return toReturn;
     }
     addVote (vote) {
-        if (this != null) {
+        if (this != null && vote != null) {
+            vote = new Vote(vote);
             if (this.tree != null) {
                 this.tree.add(vote);
             }
@@ -150,22 +144,22 @@ function LinkedNodeSearchSession (node, guildId) {
     let toReturn = null;
     while (node != null) {
         if (node.element.guildId == guildId) {
-            toReturn = node;
-            break;
+            toReturn = node.element;
         }
+        break;
         node = node.next;
     }
     return toReturn;
 }
 
-function LinkedNodeSearchCandidate (candidate, name) {
+function LinkedNodeSearchCandidate (node, name) {
     let toReturn = null;
-    while (candidate != null) {
-        if (candidate.element.name == name) {
-            toReturn = node;
+    while (node != null) {
+        if (node.element.name == name) {
+            toReturn = node.element;
             break;
         }
-        candidate = candidate.next;
+        node = node.next;
     }
     return toReturn;
 }
@@ -207,10 +201,15 @@ bot.on('message', (message) => {
         toReply = "vote could not be understood and cast, make sure you spell the candidate right";
         if (command.length == 2) {
             let session = LinkedNodeSearchSession(sessions, message.guild.id);
-            console.log(session);
             let candidate = LinkedNodeSearchCandidate(session.candidates, command[1]);
-            console.log(candidate);
             candidate.addVote(message.author.id);
+            toReply = "vote was cast for " + candidate;
+            message.reply(toReply);
+        }
+        if (command.length == 3) { // for debug purposes only
+            let session = LinkedNodeSearchSession(sessions, message.guild.id);
+            let candidate = LinkedNodeSearchCandidate(session.candidates, command[1]);
+            candidate.addVote(command[2]);
             toReply = "vote was cast for " + candidate;
             message.reply(toReply);
         }
