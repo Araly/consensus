@@ -173,9 +173,16 @@ class TreeNode {
                 }
             }
         }
+        // run the balancing on the root of the tree, newHead or this
         let potentialNewHead = null;
-        if (newHead != null) {
-            toReturn = newHead.checkBalancing();
+        if (newHead != null) {toReturn
+            potentialNewHead = newHead.checkBalancing();
+            if (potentialNewHead != null) {
+                newHead = potentialNewHead;
+            }
+        }
+        else {
+            potentialNewHead = this.checkBalancing();
             if (potentialNewHead != null) {
                 newHead = potentialNewHead;
             }
@@ -267,7 +274,6 @@ class TreeNode {
         return toReturn;
     }
     checkBalancing () {
-        console.log("entering balancing");
         let toReturn = null;
         let heightDifference = 0, leftHeight = 0, rightHeight = 0, leftLeftheight = 0, leftRightHeight = 0, rightLeftheight = 0, rightRightHeight = 0;
         if (this != null) {
@@ -290,7 +296,6 @@ class TreeNode {
                 }
             }
             heightDifference = leftHeight - rightHeight;
-            console.log("heightDifference = " + heightDifference);
             if (heightDifference > 1 && this.left != null) {
                 if ((leftLeftheight - leftRightHeight) == 1) {
                     toReturn = this.rotationRight();
@@ -467,13 +472,21 @@ bot.on('message', (message) => {
         case "vote":
         toReply = "vote could not be understood and cast, make sure you spelled the candidate right";
         if (command.length == 2) {
-            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(message.author.id))
+            let session = linkedNodeSearchSession(sessions, message.guild.id);
+            let vote = null;
+            if (session != null) {
+                vote = session.addVote(command[1], new Vote(message.author.id));
+            }
             if (vote != null) {
                 toReply = "vote was cast: " + vote;
             }
         }
         if (command.length == 3) { // for debug purposes only
-            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(command[2]))
+            let session = linkedNodeSearchSession(sessions, message.guild.id);
+            let vote = null;
+            if (session != null) {
+                vote = session.addVote(command[1], new Vote(command[2]));
+            }
             if (vote != null) {
                 toReply = "vote was cast: " + vote;
             }
