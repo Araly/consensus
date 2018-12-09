@@ -78,11 +78,10 @@ class TreeNode {
         return toReturn;
     }
     add (vote) {
-        let toReturn = -1;
+        let toReturn = null;
         if (this != null) {
             if (this.vote.user == vote.user) {
                 this.vote = vote;
-                toReturn = this;
             }
             else if (this.vote.user > vote.user) {
                 if (this.left != null) {
@@ -90,7 +89,6 @@ class TreeNode {
                 }
                 else {
                     this.left = new TreeNode(vote, this, null, null);
-                    toReturn = this.left;
                 }
             }
             else if (this.vote.user < vote.user) {
@@ -99,16 +97,15 @@ class TreeNode {
                 }
                 else {
                     this.right = new TreeNode(vote, this, null, null);
-                    toReturn = this.right;
                 }
             }
+            toReturn = this.checkBalancing();
         }
         return toReturn;
     }
     remove (vote) {
-        let toReturn = null;
+        let newHead = null;
         let toRemove = this.search(vote);
-        console.log(toRemove);
         if (toRemove != null) {
             if (toRemove.parent != null) {
                 if (toRemove.left == null && toRemove.right == null) {
@@ -148,7 +145,7 @@ class TreeNode {
             }
             else {
                 if (toRemove.left == null && toRemove.right == null) {
-                    toReturn = -1; // mark the tree for deletion, nothing is left in it
+                    newHead = -1; // mark the tree for deletion, nothing is left in it
                 }
                 else if (toRemove.left != null && toRemove.right != null) {
                     // find left most node of toRemove.right
@@ -169,11 +166,154 @@ class TreeNode {
                     return toRemove;
                 }
                 else if (toRemove.left != null) {
-                    toReturn = toRemove.left; // mark toRemove.left as new head of tree
+                    newHead = toRemove.left; // mark toRemove.left as new head of tree
                 }
                 else if (toRemove.right != null) {
-                    toReturn = toRemove.right; // mark toRemove.right as new head of tree
+                    newHead = toRemove.right; // mark toRemove.right as new head of tree
                 }
+            }
+        }
+        let potentialNewHead = null;
+        if (newHead != null) {
+            toReturn = newHead.checkBalancing();
+            if (potentialNewHead != null) {
+                newHead = potentialNewHead;
+            }
+        }
+        return newHead;
+    }
+    rotationLeft () {
+        let newHead = null;
+        let parent = null;
+        if (this != null) {
+            parent = this.parent;
+            let pivot = this.right;
+            if (pivot != null) {
+                // joining root to pivot.left on root.right
+                this.right = pivot.left;
+                if (this.right != null) {
+                    this.right.parent = this;
+                }
+                // joining pivot to root on pivot.left
+                pivot.left = this;
+                this.parent = pivot;
+            }
+            // joining parent of the whole subtree to the new head of it, pivot
+            pivot.parent = parent;
+            if (parent != null) {
+                //this was not the head of the entire tree, only of the current subtree. Now to check if this was the left or the right child
+                if (pivot.parent.left == this) {
+                    pivot.parent.left = pivot;
+                }
+                else if (parent.right == this) {
+                    pivot.parent.right = pivot;
+                }
+            }
+            else {
+                newHead = pivot;
+            }
+        }
+        return newHead;
+    }
+    rotationRight () {
+        let newHead = null;
+        let parent = null;
+        if (this != null) {
+            parent = this.parent;
+            let pivot = this.left;
+            if (pivot != null) {
+                // joining root to pivot.right on root.left
+                this.left = pivot.right;
+                if (this.left != null) {
+                    this.left.parent = this;
+                }
+                // joining pivot to root on pivot.right
+                pivot.right = this;
+                this.parent = pivot;
+            }
+            // joining parent of the whole subtree to the new head of it, pivot
+            pivot.parent = parent;
+            if (parent != null) {
+                //this was not the head of the entire tree, only of the current subtree. Now to check if this was the right or the left child
+                if (pivot.parent.right == this) {
+                    pivot.parent.right = pivot;
+                }
+                else if (parent.left == this) {
+                    pivot.parent.left = pivot;
+                }
+            }
+            else {
+                newHead = pivot;
+            }
+        }
+        return newHead;
+    }
+    height () {
+        let toReturn = 0;
+        if (this != null) {
+            if (this.left == null && this.right == null) {
+                toReturn = 1;
+            }
+            else if (this.left != null && this.right != null) {
+                toReturn = Math.max(this.left.height(), this.right.height()) + 1;
+            }
+            else if (this.left != null) {
+                toReturn = this.left.height() + 1;
+            }
+            else if (this.right != null) {
+                toReturn = this.right.height() + 1;
+            }
+        }
+        return toReturn;
+    }
+    checkBalancing () {
+        console.log("entering balancing");
+        let toReturn = null;
+        let heightDifference = 0, leftHeight = 0, rightHeight = 0, leftLeftheight = 0, leftRightHeight = 0, rightLeftheight = 0, rightRightHeight = 0;
+        if (this != null) {
+            if (this.left != null) {
+                leftHeight = this.left.height();
+                if (this.left.left != null) {
+                    leftLeftheight = this.left.left.height();
+                }
+                if (this.left.right != null) {
+                    leftRightHeight = this.left.right.height();
+                }
+            }
+            if (this.right != null) {
+                rightHeight = this.right.height();
+                if (this.right.left != null) {
+                    rightLeftheight = this.right.left.height();
+                }
+                if (this.right.right != null) {
+                    rightRightHeight = this.right.right.height();
+                }
+            }
+            heightDifference = leftHeight - rightHeight;
+            console.log("heightDifference = " + heightDifference);
+            if (heightDifference > 1 && this.left != null) {
+                if ((leftLeftheight - leftRightHeight) == 1) {
+                    toReturn = this.rotationRight();
+                }
+                else {
+                    this.left.rotationLeft();
+                    toReturn = this.rotationRight();
+                }
+            }
+            else if (heightDifference < -1 && this.right != null) {
+                if ((rightLeftheight - rightRightHeight) == -1) {
+                    toReturn = this.rotationLeft();
+                }
+                else {
+                    this.right.rotationRight();
+                    toReturn = this.rotationLeft();
+                }
+            }
+            if (this.left != null) {
+                this.left.checkBalancing();
+            }
+            if (this.right != null) {
+                this.right.checkBalancing();
             }
         }
         return toReturn;
@@ -191,13 +331,17 @@ class Candidate {
         return toReturn;
     }
     addVote (vote) {
+        let result = null;
         if (this != null && vote != null) {
             if (this.tree != null) {
-                this.tree.add(vote);
+                result = this.tree.add(vote);
             }
             else {
                 this.tree = new TreeNode(vote, null, null, null);
             }
+        }
+        if (result != null) {
+            this.tree = result;
         }
     }
     removeVote (vote) {
@@ -323,7 +467,7 @@ bot.on('message', (message) => {
         case "vote":
         toReply = "vote could not be understood and cast, make sure you spelled the candidate right";
         if (command.length == 2) {
-            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(message.user.id))
+            let vote = linkedNodeSearchSession(sessions, message.guild.id).addVote(command[1], new Vote(message.author.id))
             if (vote != null) {
                 toReply = "vote was cast: " + vote;
             }
