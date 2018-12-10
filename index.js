@@ -11,14 +11,19 @@ class LinkedNode {
         return newNode;
     }
     remove (element) {
+        let toReturn = null;
         if (this != null) {
             if (this.previous != null) {
                 this.previous.next = this.next;
+            }
+            else {
+                toReturn = this.next;
             }
             if (this.next != null) {
                 this.next.previous = this.previous;
             }
         }
+        return toReturn;
     }
     toString () {
         let toReturn = "toString failed";
@@ -125,214 +130,228 @@ class TreeNode {
                     }
                     // attach back leftmost.right to the rest of the tree
                     if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
-                        toRemove.right = leftmost.right;
-                    }
-                    else {
-                        leftmost.parent.left = leftmost.right;
-                    }
-                    //replace toRemove's value by leftmost's
-                    toRemove.vote = leftmost.vote;
-                    // forget about leftmost, let it get caught by oblivion
+                    toRemove.right = leftmost.right;
                 }
-                else if (toRemove.left != null) {
-                    toRemove.left.parent = toRemove.parent;
-                    toRemove.parent.left = toRemove.left;
+                else {
+                    leftmost.parent.left = leftmost.right;
                 }
-                else if (toRemove.right != null) {
-                    toRemove.right.parent = toRemove.parent;
-                    toRemove.parent.right = toRemove.right;
-                }
+                //replace toRemove's value by leftmost's
+                toRemove.vote = leftmost.vote;
+                // forget about leftmost, let it get caught by oblivion
             }
-            else {
-                if (toRemove.left == null && toRemove.right == null) {
-                    newHead = -1; // mark the tree for deletion, nothing is left in it
-                }
-                else if (toRemove.left != null && toRemove.right != null) {
-                    // find left most node of toRemove.right
-                    let leftmost = toRemove.right;
-                    while (leftmost.left != null) {
-                        leftmost = leftmost.left;
-                    }
-                    // attach back leftmost.right to the rest of the tree
-                    if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
-                        toRemove.right = leftmost.right;
-                    }
-                    else {
-                        leftmost.parent.left = leftmost.right;
-                    }
-                    //replace toRemove's value by leftmost's
-                    toRemove.vote = leftmost.vote;
-                    // forget about leftmost, let it get caught by oblivion
-                    return toRemove;
-                }
-                else if (toRemove.left != null) {
-                    newHead = toRemove.left; // mark toRemove.left as new head of tree
-                }
-                else if (toRemove.right != null) {
-                    newHead = toRemove.right; // mark toRemove.right as new head of tree
-                }
+            else if (toRemove.left != null) {
+                toRemove.left.parent = toRemove.parent;
+                toRemove.parent.left = toRemove.left;
             }
-        }
-        // run the balancing on the root of the tree, newHead or this
-        let potentialNewHead = null;
-        if (newHead != null) {toReturn
-            potentialNewHead = newHead.checkBalancing();
-            if (potentialNewHead != null) {
-                newHead = potentialNewHead;
+            else if (toRemove.right != null) {
+                toRemove.right.parent = toRemove.parent;
+                toRemove.parent.right = toRemove.right;
             }
         }
         else {
-            potentialNewHead = this.checkBalancing();
-            if (potentialNewHead != null) {
-                newHead = potentialNewHead;
+            if (toRemove.left == null && toRemove.right == null) {
+                newHead = -1; // mark the tree for deletion, nothing is left in it
             }
-        }
-        return newHead;
-    }
-    rotationLeft () {
-        let newHead = null;
-        let parent = null;
-        if (this != null) {
-            parent = this.parent;
-            let pivot = this.right;
-            if (pivot != null) {
-                // joining root to pivot.left on root.right
-                this.right = pivot.left;
-                if (this.right != null) {
-                    this.right.parent = this;
+            else if (toRemove.left != null && toRemove.right != null) {
+                // find left most node of toRemove.right
+                let leftmost = toRemove.right;
+                while (leftmost.left != null) {
+                    leftmost = leftmost.left;
                 }
-                // joining pivot to root on pivot.left
-                pivot.left = this;
-                this.parent = pivot;
-            }
-            // joining parent of the whole subtree to the new head of it, pivot
-            pivot.parent = parent;
-            if (parent != null) {
-                //this was not the head of the entire tree, only of the current subtree. Now to check if this was the left or the right child
-                if (pivot.parent.left == this) {
-                    pivot.parent.left = pivot;
-                }
-                else if (parent.right == this) {
-                    pivot.parent.right = pivot;
-                }
+                // attach back leftmost.right to the rest of the tree
+                if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                toRemove.right = leftmost.right;
             }
             else {
-                newHead = pivot;
+                leftmost.parent.left = leftmost.right;
+            }
+            //replace toRemove's value by leftmost's
+            toRemove.vote = leftmost.vote;
+            // forget about leftmost, let it get caught by oblivion
+            return toRemove;
+        }
+        else if (toRemove.left != null) {
+            newHead = toRemove.left; // mark toRemove.left as new head of tree
+        }
+        else if (toRemove.right != null) {
+            newHead = toRemove.right; // mark toRemove.right as new head of tree
+        }
+    }
+}
+// run the balancing on the root of the tree, newHead or this
+let potentialNewHead = null;
+if (newHead != null) {toReturn
+    potentialNewHead = newHead.checkBalancing();
+    if (potentialNewHead != null) {
+        newHead = potentialNewHead;
+    }
+}
+else {
+    potentialNewHead = this.checkBalancing();
+    if (potentialNewHead != null) {
+        newHead = potentialNewHead;
+    }
+}
+return newHead;
+}
+rotationLeft () {
+    let newHead = null;
+    let parent = null;
+    if (this != null) {
+        parent = this.parent;
+        let pivot = this.right;
+        if (pivot != null) {
+            // joining root to pivot.left on root.right
+            this.right = pivot.left;
+            if (this.right != null) {
+                this.right.parent = this;
+            }
+            // joining pivot to root on pivot.left
+            pivot.left = this;
+            this.parent = pivot;
+        }
+        // joining parent of the whole subtree to the new head of it, pivot
+        pivot.parent = parent;
+        if (parent != null) {
+            //this was not the head of the entire tree, only of the current subtree. Now to check if this was the left or the right child
+            if (pivot.parent.left == this) {
+                pivot.parent.left = pivot;
+            }
+            else if (parent.right == this) {
+                pivot.parent.right = pivot;
             }
         }
-        return newHead;
+        else {
+            newHead = pivot;
+        }
     }
-    rotationRight () {
-        let newHead = null;
-        let parent = null;
-        if (this != null) {
-            parent = this.parent;
-            let pivot = this.left;
-            if (pivot != null) {
-                // joining root to pivot.right on root.left
-                this.left = pivot.right;
-                if (this.left != null) {
-                    this.left.parent = this;
-                }
-                // joining pivot to root on pivot.right
-                pivot.right = this;
-                this.parent = pivot;
+    return newHead;
+}
+rotationRight () {
+    let newHead = null;
+    let parent = null;
+    if (this != null) {
+        parent = this.parent;
+        let pivot = this.left;
+        if (pivot != null) {
+            // joining root to pivot.right on root.left
+            this.left = pivot.right;
+            if (this.left != null) {
+                this.left.parent = this;
             }
-            // joining parent of the whole subtree to the new head of it, pivot
-            pivot.parent = parent;
-            if (parent != null) {
-                //this was not the head of the entire tree, only of the current subtree. Now to check if this was the right or the left child
-                if (pivot.parent.right == this) {
-                    pivot.parent.right = pivot;
-                }
-                else if (parent.left == this) {
-                    pivot.parent.left = pivot;
-                }
+            // joining pivot to root on pivot.right
+            pivot.right = this;
+            this.parent = pivot;
+        }
+        // joining parent of the whole subtree to the new head of it, pivot
+        pivot.parent = parent;
+        if (parent != null) {
+            //this was not the head of the entire tree, only of the current subtree. Now to check if this was the right or the left child
+            if (pivot.parent.right == this) {
+                pivot.parent.right = pivot;
+            }
+            else if (parent.left == this) {
+                pivot.parent.left = pivot;
+            }
+        }
+        else {
+            newHead = pivot;
+        }
+    }
+    return newHead;
+}
+height () {
+    let toReturn = 0;
+    if (this != null) {
+        if (this.left == null && this.right == null) {
+            toReturn = 1;
+        }
+        else if (this.left != null && this.right != null) {
+            toReturn = Math.max(this.left.height(), this.right.height()) + 1;
+        }
+        else if (this.left != null) {
+            toReturn = this.left.height() + 1;
+        }
+        else if (this.right != null) {
+            toReturn = this.right.height() + 1;
+        }
+    }
+    return toReturn;
+}
+checkBalancing () {
+    let toReturn = null;
+    let heightDifference = 0, leftHeight = 0, rightHeight = 0, leftLeftheight = 0, leftRightHeight = 0, rightLeftheight = 0, rightRightHeight = 0;
+    if (this != null) {
+        if (this.left != null) {
+            leftHeight = this.left.height();
+            if (this.left.left != null) {
+                leftLeftheight = this.left.left.height();
+            }
+            if (this.left.right != null) {
+                leftRightHeight = this.left.right.height();
+            }
+        }
+        if (this.right != null) {
+            rightHeight = this.right.height();
+            if (this.right.left != null) {
+                rightLeftheight = this.right.left.height();
+            }
+            if (this.right.right != null) {
+                rightRightHeight = this.right.right.height();
+            }
+        }
+        heightDifference = leftHeight - rightHeight;
+        if (heightDifference > 1 && this.left != null) {
+            if ((leftLeftheight - leftRightHeight) == 1) {
+                toReturn = this.rotationRight();
             }
             else {
-                newHead = pivot;
+                this.left.rotationLeft();
+                toReturn = this.rotationRight();
             }
         }
-        return newHead;
-    }
-    height () {
-        let toReturn = 0;
-        if (this != null) {
-            if (this.left == null && this.right == null) {
-                toReturn = 1;
+        else if (heightDifference < -1 && this.right != null) {
+            if ((rightLeftheight - rightRightHeight) == -1) {
+                toReturn = this.rotationLeft();
             }
-            else if (this.left != null && this.right != null) {
-                toReturn = Math.max(this.left.height(), this.right.height()) + 1;
-            }
-            else if (this.left != null) {
-                toReturn = this.left.height() + 1;
-            }
-            else if (this.right != null) {
-                toReturn = this.right.height() + 1;
+            else {
+                this.right.rotationRight();
+                toReturn = this.rotationLeft();
             }
         }
-        return toReturn;
-    }
-    checkBalancing () {
-        let toReturn = null;
-        let heightDifference = 0, leftHeight = 0, rightHeight = 0, leftLeftheight = 0, leftRightHeight = 0, rightLeftheight = 0, rightRightHeight = 0;
-        if (this != null) {
-            if (this.left != null) {
-                leftHeight = this.left.height();
-                if (this.left.left != null) {
-                    leftLeftheight = this.left.left.height();
-                }
-                if (this.left.right != null) {
-                    leftRightHeight = this.left.right.height();
-                }
-            }
-            if (this.right != null) {
-                rightHeight = this.right.height();
-                if (this.right.left != null) {
-                    rightLeftheight = this.right.left.height();
-                }
-                if (this.right.right != null) {
-                    rightRightHeight = this.right.right.height();
-                }
-            }
-            heightDifference = leftHeight - rightHeight;
-            if (heightDifference > 1 && this.left != null) {
-                if ((leftLeftheight - leftRightHeight) == 1) {
-                    toReturn = this.rotationRight();
-                }
-                else {
-                    this.left.rotationLeft();
-                    toReturn = this.rotationRight();
-                }
-            }
-            else if (heightDifference < -1 && this.right != null) {
-                if ((rightLeftheight - rightRightHeight) == -1) {
-                    toReturn = this.rotationLeft();
-                }
-                else {
-                    this.right.rotationRight();
-                    toReturn = this.rotationLeft();
-                }
-            }
-            if (this.left != null) {
-                this.left.checkBalancing();
-            }
-            if (this.right != null) {
-                this.right.checkBalancing();
-            }
+        if (this.left != null) {
+            this.left.checkBalancing();
         }
-        return toReturn;
+        if (this.right != null) {
+            this.right.checkBalancing();
+        }
     }
+    return toReturn;
+}
+score () {
+    let toReturn = 0;
+    if (this != null) {
+        toReturn += this.confidence;
+        if (this.left != null) {
+            toReturn += this.left.score();
+        }
+        if (this.right != null) {
+            toReturn += this.right.score();
+        }
+    }
+    return toReturn;
+}
 }
 
 class Candidate {
-    constructor (name, score, tree) {
+    constructor (name, points, score, tree) {
         this.name = name;
+        this.points = points;
         this.score = score;
         this.tree = tree;
     }
     toString () {
-        let toReturn = this.name + "[" + this.score + "]: `" + this.tree + "`";
+        let toReturn = this.name + "[" + this.points + "]: `" + this.tree + "`";
         return toReturn;
     }
     addVote (vote) {
@@ -350,7 +369,7 @@ class Candidate {
         }
     }
     removeVote (vote) {
-        let result = null;
+        let result = null;Candidate
         if (this != null && vote != null) {
             if (this.tree != null) {
                 result = this.tree.remove(vote);
@@ -363,16 +382,24 @@ class Candidate {
             this.tree = result;
         }
     }
+    calculateScore () {
+        if (this != null) {
+            if (this.tree != null) {
+                this.score = this.tree.score();
+            }
+        }
+    }
 }
 
 class Vote {
-    constructor (user) {
+    constructor (user, confidence) {
         this.user = user;
+        this.confidence = confidence;
     }
     toString () {
         let toReturn = "toString failed";
         if (this != null) {
-            toReturn = this.user;
+            toReturn = this.user + ":" + this.confidence;
         }
         return toReturn;
     }
@@ -409,6 +436,45 @@ class Session {
         }
         return toReturn;
     }
+    calculatePoints () {
+        let toReturn = null;
+        if (this != null) {
+            let averageConfidence = 0;
+            let numberOfCandidates = 0;
+            // calculate averageConfidence
+            let node = this.candidates;
+            while (node != null) {
+                averageConfidence += node.score;
+                numberOfCandidates++;
+                node = node.next;
+            }
+            if (numberOfCandidates != 0) {
+                averageConfidence /= numberOfCandidates;
+            }
+            // change points to candidates
+            node = this.candidates;
+            while (node != null) {
+                node.points += node.score - averageConfidence;
+                node = node.next;
+            }
+            // remove all candidates with negative points
+            node = this.candidates;
+            while (node != null) {
+                if (node.points <= 0) {
+                    let result = node.remove();
+                    if (result != null) {
+                        this.candidates = result;
+                    }
+                }
+                node = node.next;
+            }
+            // if there's only one candidate left, return it, it won
+            if (this.candidates.next == null) {
+                toReturn = this.candidates;
+            }
+        }
+        return toReturn;
+    }
 }
 
 // Functions
@@ -417,6 +483,18 @@ function linkedNodeSearchSession (node, guildId) {
     while (node != null) {
         if (node.element.guildId == guildId) {
             toReturn = node.element;
+        }
+        break;
+        node = node.next;
+    }
+    return toReturn;
+}
+
+function linkedNodeSearchSessionNode (node, guildId) {
+    let toReturn = null;
+    while (node != null) {
+        if (node.element.guildId == guildId) {
+            toReturn = node;
         }
         break;
         node = node.next;
@@ -441,6 +519,7 @@ const discord = require('discord.js');
 const bot = new discord.Client();
 let sessions = null;
 const prefix = "&";
+const maximumConfidence = 10;
 
 bot.on('ready', () => {
     console.log(`logged in successfully as ${bot.user.tag}`);
@@ -470,37 +549,64 @@ bot.on('message', (message) => {
 
         // voting for one of the candidates
         case "vote":
-        toReply = "vote could not be understood and cast, make sure you spelled the candidate right";
-        if (command.length == 2) {
-            let session = linkedNodeSearchSession(sessions, message.guild.id);
-            let vote = null;
-            if (session != null) {
-                vote = session.addVote(command[1], new Vote(message.author.id));
-            }
-            if (vote != null) {
-                toReply = "vote was cast: " + vote;
+        toReply = "vote could not be understood and cast, make sure you spelled the candidate right, and that your confidence isn't above " + maximumConfidence;
+        if (command.length == 3) {
+            let confidence = parseInt(command[2]);
+            if (confidence >= 0 && confidence <= maximumConfidence) {
+                let session = linkedNodeSearchSession(sessions, message.guild.id);
+                let vote = null;
+                if (session != null) {
+                    vote = session.addVote(command[1], new Vote(message.author.id, confidence));
+                }
+                if (vote != null) {
+                    toReply = "vote was cast: " + vote;
+                }
             }
         }
-        if (command.length == 3) { // for debug purposes only
-            let session = linkedNodeSearchSession(sessions, message.guild.id);
-            let vote = null;
-            if (session != null) {
-                vote = session.addVote(command[1], new Vote(command[2]));
-            }
-            if (vote != null) {
-                toReply = "vote was cast: " + vote;
+        if (command.length == 4) { // for debug purposes only
+            let confidence = parseInt(command[2]);
+            if (confidence >= 0 && confidence <= maximumConfidence) {
+                let session = linkedNodeSearchSession(sessions, message.guild.id);
+                let vote = null;
+                if (session != null) {
+                    vote = session.addVote(command[1], new Vote(command[3], confidence));
+                }
+                if (vote != null) {
+                    toReply = "vote was cast: " + vote;
+                }
             }
         }
         message.reply(toReply);
+        break;
+
+        // next round of the session // potentially, only the one that initialized the session will be able to run this command, or not
+        case "next":
+        toReply = "this round couldn't be finalized";
+        if (command.length == 1) {
+            let session = linkedNodeSearchSession(sessions, message.guild.id);
+            let result = session.calculatePoints();
+            if (result != null) {
+                toReply = "the sessions has a winner\n**" + result + "**";
+                let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
+                result = node.remove();
+                if (result != null) {
+                    sessions = result;
+                }
+            }
+            else {
+                toReply = "the session has moved to the next round:" + session.element;
+            }
+            message.reply(toReply);
+        }
         break;
 
         // intialization of a session
         case "init":
         toReply = "session could not be initialized, probably too few parameters, please try `" + prefix + "help` for more information";
         if (command.length > 2) {
-            let candidates = new LinkedNode(new Candidate(command[command.length - 1], -1, null), null, null);
+            let candidates = new LinkedNode(new Candidate(command[command.length - 1], 100 / (command.length - 1), -1, null), null, null);
             for (i = command.length - 2; i > 0; i--) {
-                candidates = candidates.add(new Candidate(command[i], -1, null));
+                candidates = candidates.add(new Candidate(command[i], 100 / (command.length - 1), -1, null));
             }
             if (sessions == null) {
                 sessions = new LinkedNode(new Session(message.guild.id, candidates), null, null);
@@ -517,14 +623,14 @@ bot.on('message', (message) => {
         case "debug":
         toReply = "no sessions found";
         if (sessions != null) {
-            toReply = sessions.element.toString();
+            toReply = sessions.toString();
         }
         message.reply(toReply);
         break;
 
         // help command
         case "help":
-        message.reply("**consensus help :**\nno help yet, sorry");
+        message.reply("**consensus help :**\nno help yet, sorry");s
         break;
         default:
         break;
