@@ -129,8 +129,20 @@ class TreeNode {
                         leftmost = leftmost.left;
                     }
                     // attach back leftmost.right to the rest of the tree
-                    if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
-                    toRemove.right = leftmost.right;
+                    if (toRemove == leftmost.parent) {
+                        // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                        toRemove.right = leftmost.right;
+                    }
+                    else {
+                        leftmost.parent.left = leftmost.right;
+                    }
+                    //replace toRemove's value by leftmost's
+                    toRemove.vote = leftmost.vote;
+                    // forget about leftmost, let it get caught by oblivion
+                }
+                else if (toRemove.left != null) {
+                    toRemove.left.parent = toRemove.parent;
+                    toRemove.parent.left = toRemove.left;
                 }
                 else {
                     leftmost.parent.left = leftmost.right;
@@ -139,9 +151,35 @@ class TreeNode {
                 toRemove.vote = leftmost.vote;
                 // forget about leftmost, let it get caught by oblivion
             }
-            else if (toRemove.left != null) {
-                toRemove.left.parent = toRemove.parent;
-                toRemove.parent.left = toRemove.left;
+            else {
+                if (toRemove.left == null && toRemove.right == null) {
+                    newHead = -1; // mark the tree for deletion, nothing is left in it
+                }
+                else if (toRemove.left != null && toRemove.right != null) {
+                    // find left most node of toRemove.right
+                    let leftmost = toRemove.right;
+                    while (leftmost.left != null) {
+                        leftmost = leftmost.left;
+                    }
+                    // attach back leftmost.right to the rest of the tree
+                    if (toRemove == leftmost.parent) {
+                        // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                        toRemove.right = leftmost.right;
+                    }
+                    else {
+                        leftmost.parent.left = leftmost.right;
+                    }
+                    //replace toRemove's value by leftmost's
+                    toRemove.vote = leftmost.vote;
+                    // forget about leftmost, let it get caught by oblivion
+                    return toRemove;
+                }
+                else if (toRemove.left != null) {
+                    newHead = toRemove.left; // mark toRemove.left as new head of tree
+                }
+                else if (toRemove.right != null) {
+                    newHead = toRemove.right; // mark toRemove.right as new head of tree
+                }
             }
             else if (toRemove.right != null) {
                 toRemove.right.parent = toRemove.parent;
@@ -339,8 +377,21 @@ score () {
             toReturn += this.right.score();
         }
     }
-    return toReturn;
-}
+    score () {
+        let toReturn = 0;
+        if (this != null) {
+            toReturn += this.vote.confidence;
+            if (this.left != null) {
+                toReturn += this.left.score();
+            }
+            if (this.right != null) {
+                toReturn += this.right.score();
+            }
+        }
+        console.log("score");
+        console.log(toReturn);
+        return toReturn;
+    }
 }
 
 class Candidate {
@@ -444,23 +495,28 @@ class Session {
             // calculate averageConfidence
             let node = this.candidates;
             while (node != null) {
-                averageConfidence += node.score;
+                node.element.calculateScore();
+                averageConfidence += node.element.score;
                 numberOfCandidates++;
                 node = node.next;
             }
+            console.log("averageConfidence before");
+            console.log(averageConfidence);
             if (numberOfCandidates != 0) {
                 averageConfidence /= numberOfCandidates;
             }
+            console.log("averageConfidence after");
+            console.log(averageConfidence);
             // change points to candidates
             node = this.candidates;
             while (node != null) {
-                node.points += node.score - averageConfidence;
+                node.element.points += node.element.score - averageConfidence;
                 node = node.next;
             }
             // remove all candidates with negative points
             node = this.candidates;
             while (node != null) {
-                if (node.points <= 0) {
+                if (node.element.points <= 0) {
                     let result = node.remove();
                     if (result != null) {
                         this.candidates = result;
@@ -474,6 +530,15 @@ class Session {
             }
         }
         return toReturn;
+    }
+    wipeCandidateTrees () {
+        if (this != null) {
+            let node = this.candidates;
+            while (node != null) {
+                node.element.tree = null;
+                node = node.next;
+            }
+        }
     }
 }
 
@@ -585,6 +650,7 @@ bot.on('message', (message) => {
         if (command.length == 1) {
             let session = linkedNodeSearchSession(sessions, message.guild.id);
             let result = session.calculatePoints();
+            session.wipeCandidateTrees();
             if (result != null) {
                 toReply = "the sessions has a winner\n**" + result + "**";
                 let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
@@ -594,7 +660,7 @@ bot.on('message', (message) => {
                 }
             }
             else {
-                toReply = "the session has moved to the next round:" + session.element;
+                toReply = "the session has moved to the next round:" + session;
             }
             message.reply(toReply);
         }
@@ -639,4 +705,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("TOKEN");
+bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvE5Bw.4RTmNYf-kfmwuGAwyfFcro1xVDg");
