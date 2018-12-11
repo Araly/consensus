@@ -37,6 +37,17 @@ class LinkedNode {
         }
         return toReturn;
     }
+    info () {
+        let toReturn = "";
+        if (this != null) {
+            let node = this;
+            while (node != null) {
+                toReturn += " " + node.element.name;
+                node = node.next;
+            }
+        }
+        return toReturn;
+    }
 }
 
 class TreeNode {
@@ -493,6 +504,17 @@ class Session {
             }
         }
     }
+    info () {
+        let toReturn = "";
+        if (this != null) {
+            let node = this.candidates;
+            while (node != null) {
+                toReturn += "\n    **" + node.element.name + "**:" + parseInt(node.element.points) + "\n" + relativeBar(node.element.points, 100);
+                node = node.next;
+            }
+        }
+        return toReturn;
+    }
 }
 
 // Functions
@@ -532,6 +554,19 @@ function linkedNodeSearchCandidate (node, name) {
     return toReturn;
 }
 
+function relativeBar(value, max) {
+    let text = '`[';
+    for (let i = 0; i < 20; i++) {
+        if (i < (value / max) * 20) {
+            text += '#';
+        }
+        else {
+            text += '.';
+        }
+    }
+    return text + ']`';
+}
+
 // Constants
 const discord = require('discord.js');
 const bot = new discord.Client();
@@ -563,6 +598,12 @@ bot.on('message', (message) => {
     switch (command[0]) {
         // displaying general information about the bot, and information about the current session if it exists
         case "info":
+        toReply = "info ran into a problem, there's probably not a session to display";
+        let session = linkedNodeSearchSession(sessions, message.guild.id);
+        if (session != null) {
+            toReply = "Session for " + message.guild.name + session.info();
+        }
+        message.reply(toReply);
         break;
 
         // voting for one of the candidates
@@ -633,7 +674,7 @@ bot.on('message', (message) => {
             else {
                 sessions = sessions.add(new Session(message.guild.id, candidates));
             }
-            toReply = "initialized session with" + candidates;
+            toReply = "initialized session with**" + candidates.info() + "**";
         }
         message.reply(toReply);
         break;
@@ -658,4 +699,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvE5Bw.4RTmNYf-kfmwuGAwyfFcro1xVDg");
+bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvFHuw.jtws4wXZ5p0K0YlXbAKCwDAv6tU");
