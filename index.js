@@ -6,8 +6,27 @@ class LinkedNode {
         this.next = next;
     }
     add (element) {
-        let newNode = new LinkedNode(element, null, this);
-        this.previous = newNode;
+        if (this != null) {
+            let node = this;
+            while (node != null) {
+                console.log(node);
+                if (node.element.guildId == element.guildId) {
+                    let result = node.remove();
+                    if (result != null) {
+                        if (result == -1) {
+                            node = null;
+                        }
+                        else {
+                            node = result;
+                        }
+                    }
+                }
+                console.log(node);
+                node = node.next;
+            }
+            let newNode = new LinkedNode(element, null, this);
+            this.previous = newNode;
+        }
         return newNode;
     }
     remove (element) {
@@ -17,7 +36,12 @@ class LinkedNode {
                 this.previous.next = this.next;
             }
             else {
-                toReturn = this.next;
+                if (this.next != null) {
+                    toReturn = this.next;
+                }
+                else {
+                    toReturn = -1;
+                }
             }
             if (this.next != null) {
                 this.next.previous = this.previous;
@@ -193,7 +217,7 @@ class TreeNode {
         }
         // run the balancing on the root of the tree, newHead or this
         let potentialNewHead = null;
-        if (newHead != null) {toReturn
+        if (newHead != null) {
             potentialNewHead = newHead.checkBalancing();
             if (potentialNewHead != null) {
                 newHead = potentialNewHead;
@@ -352,8 +376,6 @@ class TreeNode {
                 toReturn += this.right.score();
             }
         }
-        console.log("score");
-        console.log(toReturn);
         return toReturn;
     }
 }
@@ -464,13 +486,9 @@ class Session {
                 numberOfCandidates++;
                 node = node.next;
             }
-            console.log("averageConfidence before");
-            console.log(averageConfidence);
             if (numberOfCandidates != 0) {
                 averageConfidence /= numberOfCandidates;
             }
-            console.log("averageConfidence after");
-            console.log(averageConfidence);
             // change points to candidates
             node = this.candidates;
             while (node != null) {
@@ -618,7 +636,7 @@ bot.on('message', (message) => {
                     vote = session.addVote(command[1], new Vote(message.author.id, confidence));
                 }
                 if (vote != null) {
-                    toReply = "vote was cast: " + vote;
+                    toReply = "vote was cast: " + vote + " for " + command[1];
                 }
             }
         }
@@ -631,7 +649,26 @@ bot.on('message', (message) => {
                     vote = session.addVote(command[1], new Vote(command[3], confidence));
                 }
                 if (vote != null) {
-                    toReply = "vote was cast: " + vote;
+                    toReply = "vote was cast: " + vote + " for " + command[1];
+                }
+            }
+        }
+        message.reply(toReply);
+        break;
+
+        // voting privately for one of the candidates, specifying guildid
+        case "votep":
+        toReply = "vote could not be understood and cast, make sure you spelled the candidate right, and that your confidence isn't above " + maximumConfidence;
+        if (command.length == 4) {
+            let confidence = parseInt(command[2]);
+            if (confidence >= 0 && confidence <= maximumConfidence) {
+                let session = linkedNodeSearchSession(sessions, command[3]);
+                let vote = null;
+                if (session != null) {
+                    vote = session.addVote(command[1], new Vote(message.author.id, confidence));
+                }
+                if (vote != null) {
+                    toReply = "private vote was cast: " + vote + " for " + command[1];
                 }
             }
         }
@@ -650,7 +687,12 @@ bot.on('message', (message) => {
                 let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
                 result = node.remove();
                 if (result != null) {
-                    sessions = result;
+                    if (result == -1) {
+                        sessions = null;
+                    }
+                    else {
+                        sessions = result;
+                    }
                 }
             }
             else {
@@ -674,7 +716,7 @@ bot.on('message', (message) => {
             else {
                 sessions = sessions.add(new Session(message.guild.id, candidates));
             }
-            toReply = "initialized session with**" + candidates.info() + "**";
+            toReply = "initialized session (" + message.guild.id + ") with**" + candidates.info() + "**";
         }
         message.reply(toReply);
         break;
@@ -690,7 +732,7 @@ bot.on('message', (message) => {
 
         // help command
         case "help":
-        message.reply("**consensus help :**\nno help yet, sorry");s
+        message.reply("**consensus help :**\nno help yet, sorry");
         break;
         default:
         break;
@@ -699,4 +741,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvFHuw.jtws4wXZ5p0K0YlXbAKCwDAv6tU");
+bot.login("");
