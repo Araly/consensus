@@ -6,6 +6,7 @@ class LinkedNode {
         this.next = next;
     }
     add (element) {
+        /*
         if (this != null) {
             let node = this;
             while (node != null) {
@@ -27,6 +28,10 @@ class LinkedNode {
             let newNode = new LinkedNode(element, null, this);
             this.previous = newNode;
         }
+        return newNode;
+        */
+        let newNode = new LinkedNode(element, null, this);
+        this.previous = newNode;
         return newNode;
     }
     remove (element) {
@@ -696,7 +701,7 @@ bot.on('message', (message) => {
                 }
             }
             else {
-                toReply = "the session has moved to the next round:" + session;
+                toReply = "the session has moved to the next round:\n" + session.next();
             }
             message.reply(toReply);
         }
@@ -741,4 +746,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("");
+bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvKd9Q.yuJKDWsOKlPaNIbZGSMKsH67iRU");
