@@ -482,22 +482,25 @@ class Session {
         let toReturn = null;
         if (this != null) {
             let averageConfidence = 0;
+            let totalConfidence = 0
             let numberOfCandidates = 0;
             // calculate averageConfidence
             let node = this.candidates;
             while (node != null) {
                 node.element.calculateScore();
-                averageConfidence += node.element.score;
+                totalConfidence += node.element.score;
                 numberOfCandidates++;
                 node = node.next;
             }
             if (numberOfCandidates != 0) {
-                averageConfidence /= numberOfCandidates;
+                averageConfidence = totalConfidence / numberOfCandidates;
             }
             // change points to candidates
             node = this.candidates;
             while (node != null) {
-                node.element.points += node.element.score - averageConfidence;
+                console.log("" + node.element.score + "/" + totalConfidence + "=" + node.element.score / totalConfidence);
+                node.element.points -= 100/4;
+                node.element.points += (node.element.score / totalConfidence) * 100/4;
                 node = node.next;
             }
             // remove all candidates with negative points
@@ -685,23 +688,25 @@ bot.on('message', (message) => {
         toReply = "this round couldn't be finalized";
         if (command.length == 1) {
             let session = linkedNodeSearchSession(sessions, message.guild.id);
-            let result = session.calculatePoints();
-            session.wipeCandidateTrees();
-            if (result != null) {
-                toReply = "the sessions has a winner\n**" + result + "**";
-                let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
-                result = node.remove();
+            if (session != null) {
+                let result = session.calculatePoints();
+                session.wipeCandidateTrees();
                 if (result != null) {
-                    if (result == -1) {
-                        sessions = null;
-                    }
-                    else {
-                        sessions = result;
+                    toReply = "the sessions has a winner\n**" + result + "**";
+                    let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
+                    result = node.remove();
+                    if (result != null) {
+                        if (result == -1) {
+                            sessions = null;
+                        }
+                        else {
+                            sessions = result;
+                        }
                     }
                 }
-            }
-            else {
-                toReply = "the session has moved to the next round:\n" + session.next();
+                else {
+                    toReply = "the session has moved to the next round:\n" + session.info();
+                }
             }
             message.reply(toReply);
         }
@@ -711,9 +716,9 @@ bot.on('message', (message) => {
         case "init":
         toReply = "session could not be initialized, probably too few parameters, please try `" + prefix + "help` for more information";
         if (command.length > 2) {
-            let candidates = new LinkedNode(new Candidate(command[command.length - 1], 100 / (command.length - 1), -1, null), null, null);
+            let candidates = new LinkedNode(new Candidate(command[command.length - 1], 100 / (command.length - 1), 0, null), null, null);
             for (i = command.length - 2; i > 0; i--) {
-                candidates = candidates.add(new Candidate(command[i], 100 / (command.length - 1), -1, null));
+                candidates = candidates.add(new Candidate(command[i], 100 / (command.length - 1), 0, null));
             }
             if (sessions == null) {
                 sessions = new LinkedNode(new Session(message.guild.id, candidates), null, null);
@@ -737,7 +742,7 @@ bot.on('message', (message) => {
 
         // help command
         case "help":
-        message.reply("**consensus help :**\nno help yet, sorry");
+    message.reply("**consensus help:**\n  `init [body]`: initializes a session with as candidates, words of [body]. *ex: init red green blue*\n  `vote [candidate] [confidence]`: casts a vote for user, for [candidate], with [confidence] (between 0 and " + maximumConfidence + "). *ex: vote red 5*\n  `votep [candidate] [confidence] [server]`: casts a private vote for the user, for [candidate], with [confidence], for the session in [server] *ex: votep red 5 123456*\n  `next`: finishes current round and opens next round");
         break;
         default:
         break;
@@ -746,4 +751,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvKd9Q.yuJKDWsOKlPaNIbZGSMKsH67iRU");
+bot.login("");
