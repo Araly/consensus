@@ -221,11 +221,6 @@ class TreeNode {
                     newHead = toRemove.right; // mark toRemove.right as new head of tree
                 }
             }
-<<<<<<< HEAD
-            else if (toRemove.right != null) {
-                toRemove.right.parent = toRemove.parent;
-                toRemove.parent.right = toRemove.right;
-=======
         }
         // run the balancing on the root of the tree, newHead or this
         let potentialNewHead = null;
@@ -233,7 +228,6 @@ class TreeNode {
             potentialNewHead = newHead.checkBalancing();
             if (potentialNewHead != null) {
                 newHead = potentialNewHead;
->>>>>>> dev
             }
         }
         else {
