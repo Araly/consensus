@@ -197,41 +197,40 @@ class TreeNode {
                     leftmost = leftmost.left;
                 }
                 // attach back leftmost.right to the rest of the tree
-                if (toRemove == leftmost.parent) {
-                    // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
-                    toRemove.right = leftmost.right;
-                }
-                else {
-                    leftmost.parent.left = leftmost.right;
-                }
-                //replace toRemove's value by leftmost's
-                toRemove.vote = leftmost.vote;
-                // forget about leftmost, let it get caught by oblivion
-                return toRemove;
+                if (toRemove == leftmost.parent) { // if this is true, then toRemove.right is leftmost, there is no sense in attaching back to the tree because leftmost is the tree, and it's already attached
+                toRemove.right = leftmost.right;
             }
-            else if (toRemove.left != null) {
-                newHead = toRemove.left; // mark toRemove.left as new head of tree
+            else {
+                leftmost.parent.left = leftmost.right;
             }
-            else if (toRemove.right != null) {
-                newHead = toRemove.right; // mark toRemove.right as new head of tree
-            }
+            //replace toRemove's value by leftmost's
+            toRemove.vote = leftmost.vote;
+            // forget about leftmost, let it get caught by oblivion
+            return toRemove;
+        }
+        else if (toRemove.left != null) {
+            newHead = toRemove.left; // mark toRemove.left as new head of tree
+        }
+        else if (toRemove.right != null) {
+            newHead = toRemove.right; // mark toRemove.right as new head of tree
         }
     }
-    // run the balancing on the root of the tree, newHead or this
-    let potentialNewHead = null;
-    if (newHead != null) {toReturn
-        potentialNewHead = newHead.checkBalancing();
-        if (potentialNewHead != null) {
-            newHead = potentialNewHead;
-        }
+}
+// run the balancing on the root of the tree, newHead or this
+let potentialNewHead = null;
+if (newHead != null) {toReturn
+    potentialNewHead = newHead.checkBalancing();
+    if (potentialNewHead != null) {
+        newHead = potentialNewHead;
     }
-    else {
-        potentialNewHead = this.checkBalancing();
-        if (potentialNewHead != null) {
-            newHead = potentialNewHead;
-        }
+}
+else {
+    potentialNewHead = this.checkBalancing();
+    if (potentialNewHead != null) {
+        newHead = potentialNewHead;
     }
-    return newHead;
+}
+return newHead;
 }
 rotationLeft () {
     let newHead = null;
