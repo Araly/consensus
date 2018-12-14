@@ -6,6 +6,30 @@ class LinkedNode {
         this.next = next;
     }
     add (element) {
+        /*
+        if (this != null) {
+            let node = this;
+            while (node != null) {
+                console.log(node);
+                if (node.element.guildId == element.guildId) {
+                    let result = node.remove();
+                    if (result != null) {
+                        if (result == -1) {
+                            node = null;
+                        }
+                        else {
+                            node = result;
+                        }
+                    }
+                }
+                console.log(node);
+                node = node.next;
+            }
+            let newNode = new LinkedNode(element, null, this);
+            this.previous = newNode;
+        }
+        return newNode;
+        */
         let newNode = new LinkedNode(element, null, this);
         this.previous = newNode;
         return newNode;
@@ -17,7 +41,12 @@ class LinkedNode {
                 this.previous.next = this.next;
             }
             else {
-                toReturn = this.next;
+                if (this.next != null) {
+                    toReturn = this.next;
+                }
+                else {
+                    toReturn = -1;
+                }
             }
             if (this.next != null) {
                 this.next.previous = this.previous;
@@ -33,6 +62,17 @@ class LinkedNode {
             while (node.next != null) {
                 node = node.next;
                 toReturn += "\n" + node.element;
+            }
+        }
+        return toReturn;
+    }
+    info () {
+        let toReturn = "";
+        if (this != null) {
+            let node = this;
+            while (node != null) {
+                toReturn += " " + node.element.name;
+                node = node.next;
             }
         }
         return toReturn;
@@ -181,9 +221,19 @@ class TreeNode {
                     newHead = toRemove.right; // mark toRemove.right as new head of tree
                 }
             }
+<<<<<<< HEAD
             else if (toRemove.right != null) {
                 toRemove.right.parent = toRemove.parent;
                 toRemove.parent.right = toRemove.right;
+=======
+        }
+        // run the balancing on the root of the tree, newHead or this
+        let potentialNewHead = null;
+        if (newHead != null) {
+            potentialNewHead = newHead.checkBalancing();
+            if (potentialNewHead != null) {
+                newHead = potentialNewHead;
+>>>>>>> dev
             }
         }
         else {
@@ -388,8 +438,6 @@ score () {
                 toReturn += this.right.score();
             }
         }
-        console.log("score");
-        console.log(toReturn);
         return toReturn;
     }
 }
@@ -491,26 +539,25 @@ class Session {
         let toReturn = null;
         if (this != null) {
             let averageConfidence = 0;
+            let totalConfidence = 0
             let numberOfCandidates = 0;
             // calculate averageConfidence
             let node = this.candidates;
             while (node != null) {
                 node.element.calculateScore();
-                averageConfidence += node.element.score;
+                totalConfidence += node.element.score;
                 numberOfCandidates++;
                 node = node.next;
             }
-            console.log("averageConfidence before");
-            console.log(averageConfidence);
             if (numberOfCandidates != 0) {
-                averageConfidence /= numberOfCandidates;
+                averageConfidence = totalConfidence / numberOfCandidates;
             }
-            console.log("averageConfidence after");
-            console.log(averageConfidence);
             // change points to candidates
             node = this.candidates;
             while (node != null) {
-                node.element.points += node.element.score - averageConfidence;
+                console.log("" + node.element.score + "/" + totalConfidence + "=" + node.element.score / totalConfidence);
+                node.element.points -= 100/4;
+                node.element.points += (node.element.score / totalConfidence) * 100/4;
                 node = node.next;
             }
             // remove all candidates with negative points
@@ -539,6 +586,17 @@ class Session {
                 node = node.next;
             }
         }
+    }
+    info () {
+        let toReturn = "";
+        if (this != null) {
+            let node = this.candidates;
+            while (node != null) {
+                toReturn += "\n    **" + node.element.name + "**:" + parseInt(node.element.points) + "\n" + relativeBar(node.element.points, 100);
+                node = node.next;
+            }
+        }
+        return toReturn;
     }
 }
 
@@ -579,6 +637,19 @@ function linkedNodeSearchCandidate (node, name) {
     return toReturn;
 }
 
+function relativeBar(value, max) {
+    let text = '`[';
+    for (let i = 0; i < 20; i++) {
+        if (i < (value / max) * 20) {
+            text += '#';
+        }
+        else {
+            text += '.';
+        }
+    }
+    return text + ']`';
+}
+
 // Constants
 const discord = require('discord.js');
 const bot = new discord.Client();
@@ -610,6 +681,12 @@ bot.on('message', (message) => {
     switch (command[0]) {
         // displaying general information about the bot, and information about the current session if it exists
         case "info":
+        toReply = "info ran into a problem, there's probably not a session to display";
+        let session = linkedNodeSearchSession(sessions, message.guild.id);
+        if (session != null) {
+            toReply = "Session for " + message.guild.name + session.info();
+        }
+        message.reply(toReply);
         break;
 
         // voting for one of the candidates
@@ -624,7 +701,7 @@ bot.on('message', (message) => {
                     vote = session.addVote(command[1], new Vote(message.author.id, confidence));
                 }
                 if (vote != null) {
-                    toReply = "vote was cast: " + vote;
+                    toReply = "vote was cast: " + vote + " for " + command[1];
                 }
             }
         }
@@ -637,7 +714,26 @@ bot.on('message', (message) => {
                     vote = session.addVote(command[1], new Vote(command[3], confidence));
                 }
                 if (vote != null) {
-                    toReply = "vote was cast: " + vote;
+                    toReply = "vote was cast: " + vote + " for " + command[1];
+                }
+            }
+        }
+        message.reply(toReply);
+        break;
+
+        // voting privately for one of the candidates, specifying guildid
+        case "votep":
+        toReply = "vote could not be understood and cast, make sure you spelled the candidate right, and that your confidence isn't above " + maximumConfidence;
+        if (command.length == 4) {
+            let confidence = parseInt(command[2]);
+            if (confidence >= 0 && confidence <= maximumConfidence) {
+                let session = linkedNodeSearchSession(sessions, command[3]);
+                let vote = null;
+                if (session != null) {
+                    vote = session.addVote(command[1], new Vote(message.author.id, confidence));
+                }
+                if (vote != null) {
+                    toReply = "private vote was cast: " + vote + " for " + command[1];
                 }
             }
         }
@@ -649,18 +745,25 @@ bot.on('message', (message) => {
         toReply = "this round couldn't be finalized";
         if (command.length == 1) {
             let session = linkedNodeSearchSession(sessions, message.guild.id);
-            let result = session.calculatePoints();
-            session.wipeCandidateTrees();
-            if (result != null) {
-                toReply = "the sessions has a winner\n**" + result + "**";
-                let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
-                result = node.remove();
+            if (session != null) {
+                let result = session.calculatePoints();
+                session.wipeCandidateTrees();
                 if (result != null) {
-                    sessions = result;
+                    toReply = "the sessions has a winner\n**" + result + "**";
+                    let node = linkedNodeSearchSessionNode(sessions, message.guild.id);
+                    result = node.remove();
+                    if (result != null) {
+                        if (result == -1) {
+                            sessions = null;
+                        }
+                        else {
+                            sessions = result;
+                        }
+                    }
                 }
-            }
-            else {
-                toReply = "the session has moved to the next round:" + session;
+                else {
+                    toReply = "the session has moved to the next round:\n" + session.info();
+                }
             }
             message.reply(toReply);
         }
@@ -670,9 +773,9 @@ bot.on('message', (message) => {
         case "init":
         toReply = "session could not be initialized, probably too few parameters, please try `" + prefix + "help` for more information";
         if (command.length > 2) {
-            let candidates = new LinkedNode(new Candidate(command[command.length - 1], 100 / (command.length - 1), -1, null), null, null);
+            let candidates = new LinkedNode(new Candidate(command[command.length - 1], 100 / (command.length - 1), 0, null), null, null);
             for (i = command.length - 2; i > 0; i--) {
-                candidates = candidates.add(new Candidate(command[i], 100 / (command.length - 1), -1, null));
+                candidates = candidates.add(new Candidate(command[i], 100 / (command.length - 1), 0, null));
             }
             if (sessions == null) {
                 sessions = new LinkedNode(new Session(message.guild.id, candidates), null, null);
@@ -680,7 +783,7 @@ bot.on('message', (message) => {
             else {
                 sessions = sessions.add(new Session(message.guild.id, candidates));
             }
-            toReply = "initialized session with" + candidates;
+            toReply = "initialized session (" + message.guild.id + ") with**" + candidates.info() + "**";
         }
         message.reply(toReply);
         break;
@@ -696,7 +799,7 @@ bot.on('message', (message) => {
 
         // help command
         case "help":
-        message.reply("**consensus help :**\nno help yet, sorry");s
+    message.reply("**consensus help:**\n  `init [body]`: initializes a session with as candidates, words of [body]. *ex: init red green blue*\n  `vote [candidate] [confidence]`: casts a vote for user, for [candidate], with [confidence] (between 0 and " + maximumConfidence + "). *ex: vote red 5*\n  `votep [candidate] [confidence] [server]`: casts a private vote for the user, for [candidate], with [confidence], for the session in [server] *ex: votep red 5 123456*\n  `next`: finishes current round and opens next round");
         break;
         default:
         break;
@@ -705,4 +808,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("NDg2NjMxMjIyNzY0NjM0MTMy.DvE5Bw.4RTmNYf-kfmwuGAwyfFcro1xVDg");
+bot.login("");
