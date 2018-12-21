@@ -223,7 +223,7 @@ class TreeNode {
         // run the balancing on the root of the tree, newHead or this
         let potentialNewHead = null;
         if (newHead != null) {
-            potentialNewHead = newHead.checkBalancing();
+            potentialNewHead = newHead.checkBalancing(); //TypeError: newHead.checkBalancing is not a function
             if (potentialNewHead != null) {
                 newHead = potentialNewHead;
             }
@@ -525,7 +525,7 @@ class Session {
         if (this != null) {
             let node = this.candidates;
             while (node != null) {
-                node.element.tree = null;
+                node.element.tree = null; //TypeError: Cannot set property 'tree' of undefined
                 node = node.next;
             }
         }
@@ -751,4 +751,4 @@ bot.on('message', (message) => {
 
 // Replace TOKEN by the secret token
 console.log("attempting to login...");
-bot.login("");
+bot.login("TOKEN");
